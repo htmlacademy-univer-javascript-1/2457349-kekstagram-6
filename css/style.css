@@ -1395,3 +1395,18 @@ main {
 .hidden {
   display: none;
 }
+
+/* Стили для ошибок валидации Pristine */
+
+.img-upload__field-wrapper--invalid input,
+.img-upload__field-wrapper--invalid textarea {
+  background-color: #fff5f5; /* Розовый фон */
+}
+
+.img-upload__error {
+  display: block;
+  color: #ff6b6b; /* Красный текст */
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
