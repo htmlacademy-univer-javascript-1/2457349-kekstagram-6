@@ -1,3 +1,10 @@
+import {
+  enableScaleControls,
+  disableScaleControls,
+  setupEffectsSystem,
+  clearAllEffects,
+} from './effects.js';
+
 const HASHTAG_MAX_LENGTH = 20;
 const HASHTAG_COUNT_LIMIT = 5;
 
@@ -35,6 +42,8 @@ function setupImageUploadForm() {
     }
     editOverlay.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    enableScaleControls();
+    setupEffectsSystem();
   };
 
   // Функция закрытия формы
@@ -47,6 +56,8 @@ function setupImageUploadForm() {
     const submitBtn = uploadFormElement.querySelector('.img-upload__submit');
     submitBtn.disabled = false;
     submitBtn.removeAttribute('title');
+    disableScaleControls();
+    clearAllEffects();
   };
 
   const validateHashtagsInput = (hashtagText) => {
