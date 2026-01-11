@@ -1,20 +1,16 @@
 import { debounce } from './util.js';
 import { renderPictures } from './picture-rendering.js';
 
-
 const RANDOM_PHOTOS_COUNT = 10;
 const FILTER_DELAY = 500;
 
 const filtersContainer = document.querySelector('.img-filters');
-const filterButtons = document.querySelectorAll('.img-filters__button');
 const picturesContainer = document.querySelector('.pictures');
 
 let currentPhotos = [];
 let selectedFilter = 'filter-default';
 
-
 const getDefaultPhotos = (photos) => [...photos];
-
 
 const getRandomPhotos = (photos) => {
   const shuffled = [...photos];
@@ -45,7 +41,6 @@ const applyFilter = (photos, filter) => {
   }
 };
 
-
 const rerenderPhotos = () => {
   const oldPictures = picturesContainer.querySelectorAll('.picture');
   oldPictures.forEach((picture) => picture.remove());
@@ -61,10 +56,13 @@ const handleFilterButtonClick = (evt) => {
     return;
   }
 
-  filterButtons.forEach((btn) => {
-    btn.classList.remove('img-filters__button--active');
-  });
+  // Убрать класс активного фильтра с предыдущей кнопки
+  const activeButton = filtersContainer.querySelector('.img-filters__button--active');
+  if (activeButton) {
+    activeButton.classList.remove('img-filters__button--active');
+  }
 
+  // Добавить класс активного фильтра на новую кнопку
   evt.target.classList.add('img-filters__button--active');
   selectedFilter = evt.target.id;
   debouncedRerender();

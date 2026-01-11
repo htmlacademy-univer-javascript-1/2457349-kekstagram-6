@@ -1,40 +1,38 @@
-// Эндпоинты для работы с сервером
-const Endpoints = {
-  DATA: 'https://29.javascript.htmlacademy.pro/kekstagram/data',
-  UPLOAD: 'https://29.javascript.htmlacademy.pro/kekstagram',
+const BASE_URL = 'https://29.javascript.htmlacademy.pro/kekstagram';
+
+const Route = {
+  GET_DATA: '/data',
+  SEND_DATA: '/',
 };
 
-/**
- * Получает данные фотографий с сервера
- * @param {Function} onSuccess - Коллбэк при успехе
- * @param {Function} onError - Коллбэк при ошибке
- */
-const fetchPhotosData = (onSuccess, onError) => {
-  fetch(Endpoints.DATA)
-    .then((response) => response.json())
-    .then((photosData) => onSuccess(photosData))
-    .catch(() => onError('Не удалось загрузить данные с сервера'));
+const Method = {
+  GET: 'GET',
+  POST: 'POST',
 };
 
-/**
- * Отправляет данные фотографии на сервер
- * @param {Function} onSuccess - Коллбэк при успехе
- * @param {Function} onError - Коллбэк при ошибке
- * @param {FormData} photoFormData - Данные формы
- */
-const submitPhotoData = (onSuccess, onError, photoFormData) => {
-  fetch(Endpoints.UPLOAD, {
-    method: 'POST',
-    body: photoFormData,
-  })
+const ErrorText = {
+  GET_DATA: 'Не удалось загрузить данные с сервера',
+  SEND_DATA: 'Ошибка при отправке фотографии',
+};
+
+const load = (route, errorText, method = Method.GET, body = null, onSuccess, onError) => {
+  fetch(`${BASE_URL}${route}`, { method, body })
     .then((response) => {
-      if (response.ok) {
-        onSuccess();
-      } else {
-        onError('Ошибка при отправке фотографии');
+      if (!response.ok) {
+        throw new Error();
       }
+      return response.json();
     })
-    .catch(() => onError('Ошибка при отправке фотографии'));
+    .then((data) => {
+      onSuccess(data);
+    })
+    .catch(() => {
+      onError(errorText);
+    });
 };
 
-export { fetchPhotosData, submitPhotoData };
+const getData = (onSuccess, onError) => load(Route.GET_DATA, ErrorText.GET_DATA, Method.GET, null, onSuccess, onError);
+
+const sendData = (body, onSuccess, onError) => load(Route.SEND_DATA, ErrorText.SEND_DATA, Method.POST, body, onSuccess, onError);
+
+export { getData, sendData };

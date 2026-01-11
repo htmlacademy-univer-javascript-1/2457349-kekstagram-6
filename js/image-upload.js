@@ -1,15 +1,16 @@
+// Модуль для управления формой загрузки изображения
+import { isEscKey } from './util.js';
 import {
   enableScaleControls,
   disableScaleControls,
   setupEffectsSystem,
   clearAllEffects,
 } from './effects.js';
-import { submitPhotoData } from './server.js';
 
+import { sendData } from './server.js';
 
 const HASHTAG_MAX_LENGTH = 20;
 const HASHTAG_COUNT_LIMIT = 5;
-
 
 function setupImageUploadForm() {
   const uploadFormElement = document.querySelector('.img-upload__form');
@@ -22,7 +23,6 @@ function setupImageUploadForm() {
 
   let currentValidationError = '';
 
-
   // Инициализация валидатора
   const validator = new Pristine(uploadFormElement, {
     classTo: 'img-upload__field-wrapper',
@@ -33,24 +33,19 @@ function setupImageUploadForm() {
     errorTextClass: 'img-upload__error',
   });
 
-
   const getValidationError = () => currentValidationError;
-
 
   const validateCommentLength = (commentText) => {
     const maxCommentLength = 140;
     return commentText.length <= maxCommentLength;
   };
 
-
   const displayUploadForm = () => {
-
     if (!imageFileInput.files || !imageFileInput.files[0]) {
       return;
     }
 
     const selectedFile = imageFileInput.files[0];
-
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
 
     if (!validImageTypes.includes(selectedFile.type)) {
@@ -58,15 +53,15 @@ function setupImageUploadForm() {
     }
 
     const imageUrl = URL.createObjectURL(selectedFile);
-
     previewImage.src = imageUrl;
-
+    const submitBtn = uploadFormElement.querySelector('.img-upload__submit');
+    submitBtn.disabled = false;
+    submitBtn.removeAttribute('title');
     editOverlay.classList.remove('hidden');
     document.body.classList.add('modal-open');
     enableScaleControls();
     setupEffectsSystem();
   };
-
 
   const showSuccessModal = () => {
     const successTemplate = document.querySelector('#success');
@@ -81,7 +76,7 @@ function setupImageUploadForm() {
     };
 
     const handleSuccessEsc = (evt) => {
-      if (evt.key === 'Escape') {
+      if (isEscKey(evt)) {
         evt.preventDefault();
         closeSuccess();
       }
@@ -97,7 +92,6 @@ function setupImageUploadForm() {
     document.addEventListener('keydown', handleSuccessEsc);
     document.addEventListener('click', handleSuccessOverlay);
   };
-
 
   const showErrorModal = (errorMessage) => {
     const errorTemplate = document.querySelector('#error');
@@ -115,7 +109,7 @@ function setupImageUploadForm() {
     };
 
     const handleErrorEsc = (evt) => {
-      if (evt.key === 'Escape') {
+      if (isEscKey(evt)) {
         evt.preventDefault();
         closeError();
       }
@@ -132,7 +126,6 @@ function setupImageUploadForm() {
     document.addEventListener('click', handleErrorOverlay);
   };
 
-
   // Функция закрытия формы
   const hideUploadForm = () => {
     editOverlay.classList.add('hidden');
@@ -140,19 +133,21 @@ function setupImageUploadForm() {
     uploadFormElement.reset();
     validator.reset();
     imageFileInput.value = '';
+
     const submitBtn = uploadFormElement.querySelector('.img-upload__submit');
     submitBtn.disabled = false;
     submitBtn.removeAttribute('title');
     submitBtn.textContent = 'Опубликовать';
+
     disableScaleControls();
     clearAllEffects();
   };
-
 
   const validateHashtagsInput = (hashtagText) => {
     currentValidationError = '';
     const text = hashtagText.trim();
 
+    // Хэштеги необязательны
     if (!text) {
       return true;
     }
@@ -194,13 +189,12 @@ function setupImageUploadForm() {
     return true;
   };
 
-
   const updateSubmitButtonState = () => {
     const submitButton = uploadFormElement.querySelector('.img-upload__submit');
     const isFormValid = validator.validate();
 
-
     submitButton.disabled = !isFormValid;
+
     if (!isFormValid) {
       submitButton.setAttribute('title', 'Исправьте ошибки в форме');
     } else {
@@ -208,25 +202,21 @@ function setupImageUploadForm() {
     }
   };
 
-
   const onHashtagFieldInput = () => {
     validator.validate();
     updateSubmitButtonState();
   };
-
 
   const onCommentFieldInput = () => {
     validator.validate();
     updateSubmitButtonState();
   };
 
-
   const handleDocumentEscape = (event) => {
-    if (event.key === 'Escape') {
+    if (isEscKey(event)) {
       hideUploadForm();
     }
   };
-
 
   const handleFormSubmit = (event) => {
     event.preventDefault();
@@ -239,7 +229,7 @@ function setupImageUploadForm() {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Публикую...';
 
-    submitPhotoData(
+    sendData(
       new FormData(uploadFormElement),
       () => {
         hideUploadForm();
@@ -253,7 +243,6 @@ function setupImageUploadForm() {
     );
   };
 
-
   // Регистрация валидаторов
   validator.addValidator(
     hashtagInput,
@@ -263,7 +252,6 @@ function setupImageUploadForm() {
     false
   );
 
-
   validator.addValidator(
     commentTextarea,
     validateCommentLength,
@@ -272,30 +260,25 @@ function setupImageUploadForm() {
     false
   );
 
-
   // Присоединение обработчиков событий
   imageFileInput.addEventListener('change', displayUploadForm);
   closeEditButton.addEventListener('click', hideUploadForm);
   document.addEventListener('keydown', handleDocumentEscape);
 
-
   [hashtagInput, commentTextarea].forEach((inputField) => {
     inputField.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
+      if (isEscKey(event)) {
         event.stopPropagation();
       }
     });
   });
 
-
   hashtagInput.addEventListener('input', onHashtagFieldInput);
   commentTextarea.addEventListener('input', onCommentFieldInput);
   uploadFormElement.addEventListener('submit', handleFormSubmit);
 
-
   // Начальная проверка состояния
   updateSubmitButtonState();
 }
-
 
 export { setupImageUploadForm };
