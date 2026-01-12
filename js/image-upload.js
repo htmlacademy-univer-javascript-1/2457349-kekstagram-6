@@ -1,5 +1,7 @@
 // Модуль для управления формой загрузки изображения
+
 import { isEscKey } from './util.js';
+
 import {
   enableScaleControls,
   disableScaleControls,
@@ -10,6 +12,7 @@ import {
 import { sendData } from './server.js';
 
 const HASHTAG_MAX_LENGTH = 20;
+
 const HASHTAG_COUNT_LIMIT = 5;
 
 function setupImageUploadForm() {
@@ -40,92 +43,6 @@ function setupImageUploadForm() {
     return commentText.length <= maxCommentLength;
   };
 
-  const displayUploadForm = () => {
-    if (!imageFileInput.files || !imageFileInput.files[0]) {
-      return;
-    }
-
-    const selectedFile = imageFileInput.files[0];
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-
-    if (!validImageTypes.includes(selectedFile.type)) {
-      return;
-    }
-
-    const imageUrl = URL.createObjectURL(selectedFile);
-    previewImage.src = imageUrl;
-    const submitBtn = uploadFormElement.querySelector('.img-upload__submit');
-    submitBtn.disabled = false;
-    submitBtn.removeAttribute('title');
-    editOverlay.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-    enableScaleControls();
-    setupEffectsSystem();
-  };
-
-  const showSuccessModal = () => {
-    const successTemplate = document.querySelector('#success');
-    const successElement = successTemplate.content.cloneNode(true);
-    document.body.appendChild(successElement);
-
-    const successModal = document.querySelector('.success');
-    const successButton = document.querySelector('.success__button');
-
-    const closeSuccess = () => {
-      successModal.remove();
-    };
-
-    const handleSuccessEsc = (evt) => {
-      if (isEscKey(evt)) {
-        evt.preventDefault();
-        closeSuccess();
-      }
-    };
-
-    const handleSuccessOverlay = (evt) => {
-      if (evt.target === successModal) {
-        closeSuccess();
-      }
-    };
-
-    successButton.addEventListener('click', closeSuccess);
-    document.addEventListener('keydown', handleSuccessEsc);
-    document.addEventListener('click', handleSuccessOverlay);
-  };
-
-  const showErrorModal = (errorMessage) => {
-    const errorTemplate = document.querySelector('#error');
-    const errorElement = errorTemplate.content.cloneNode(true);
-    document.body.appendChild(errorElement);
-
-    const errorModal = document.querySelector('.error');
-    const errorTitle = document.querySelector('.error__title');
-    const errorButton = document.querySelector('.error__button');
-
-    errorTitle.textContent = errorMessage;
-
-    const closeError = () => {
-      errorModal.remove();
-    };
-
-    const handleErrorEsc = (evt) => {
-      if (isEscKey(evt)) {
-        evt.preventDefault();
-        closeError();
-      }
-    };
-
-    const handleErrorOverlay = (evt) => {
-      if (evt.target === errorModal) {
-        closeError();
-      }
-    };
-
-    errorButton.addEventListener('click', closeError);
-    document.addEventListener('keydown', handleErrorEsc);
-    document.addEventListener('click', handleErrorOverlay);
-  };
-
   // Функция закрытия формы
   const hideUploadForm = () => {
     editOverlay.classList.add('hidden');
@@ -141,6 +58,102 @@ function setupImageUploadForm() {
 
     disableScaleControls();
     clearAllEffects();
+  };
+
+  const displayUploadForm = () => {
+    if (!imageFileInput.files || !imageFileInput.files[0]) {
+      return;
+    }
+
+    const selectedFile = imageFileInput.files[0];
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+
+    if (!validImageTypes.includes(selectedFile.type)) {
+      return;
+    }
+
+    const imageUrl = URL.createObjectURL(selectedFile);
+    previewImage.src = imageUrl;
+
+    const submitBtn = uploadFormElement.querySelector('.img-upload__submit');
+    submitBtn.disabled = false;
+    submitBtn.removeAttribute('title');
+
+    editOverlay.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+
+    enableScaleControls();
+    setupEffectsSystem();
+  };
+
+  const showSuccessModal = () => {
+    const successTemplate = document.querySelector('#success');
+    const successElement = successTemplate.content.cloneNode(true);
+    document.body.appendChild(successElement);
+
+    const successModal = document.querySelector('.success');
+    const successButton = document.querySelector('.success__button');
+
+    function closeSuccess() {
+      successModal.remove();
+      document.removeEventListener('keydown', handleSuccessEsc);
+      document.removeEventListener('click', handleSuccessOverlay);
+    }
+
+    function handleSuccessEsc(evt) {
+      if (isEscKey(evt)) {
+        evt.preventDefault();
+        closeSuccess();
+      }
+    }
+
+    function handleSuccessOverlay(evt) {
+      if (evt.target === successModal) {
+        closeSuccess();
+      }
+    }
+
+    successButton.addEventListener('click', closeSuccess);
+    document.addEventListener('keydown', handleSuccessEsc);
+    document.addEventListener('click', handleSuccessOverlay);
+  };
+
+  const showErrorModal = (errorMessage) => {
+    // Закрыть форму редактирования перед показом ошибки
+    hideUploadForm();
+
+    const errorTemplate = document.querySelector('#error');
+    const errorElement = errorTemplate.content.cloneNode(true);
+    document.body.appendChild(errorElement);
+
+    const errorModal = document.querySelector('.error');
+    const errorTitle = document.querySelector('.error__title');
+    const errorButton = document.querySelector('.error__button');
+
+    errorTitle.textContent = errorMessage;
+
+    function closeError() {
+      errorModal.remove();
+      document.removeEventListener('keydown', handleErrorEsc);
+      document.removeEventListener('click', handleErrorOverlay);
+    }
+
+    function handleErrorEsc(evt) {
+      if (isEscKey(evt)) {
+        evt.preventDefault();
+        closeError();
+      }
+    }
+
+    function handleErrorOverlay(evt) {
+      if (evt.target === errorModal) {
+        closeError();
+      }
+    }
+
+    errorButton.addEventListener('click', closeError);
+    document.addEventListener('keydown', handleErrorEsc);
+    document.addEventListener('click', handleErrorOverlay);
   };
 
   const validateHashtagsInput = (hashtagText) => {
@@ -192,7 +205,6 @@ function setupImageUploadForm() {
   const updateSubmitButtonState = () => {
     const submitButton = uploadFormElement.querySelector('.img-upload__submit');
     const isFormValid = validator.validate();
-
     submitButton.disabled = !isFormValid;
 
     if (!isFormValid) {
